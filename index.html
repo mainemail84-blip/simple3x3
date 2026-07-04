@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>کساب • منو</title>
+<title>simple3x3</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -102,22 +102,13 @@
   }
   .menu-name{font-weight:700; margin:10px 0 6px;}
   .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
-
-  /* Info Button */
-  .info-btn{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-    background:var(--accent); color:#111; border:none;
-    padding:13px 30px; border-radius:50px; font-weight:700;
-    box-shadow:0 8px 25px rgba(201,162,61,0.35);
-    z-index:100;
-  }
 </style>
 </head>
 <body>
 <div class="app">
 
   <div class="header">
-    <div class="logo">KASSAB</div>
+    <div class="logo">simple3x3</div>
     <div class="subtitle">کافه و رستوران</div>
   </div>
 
@@ -140,66 +131,70 @@
     <div class="menu-grid" id="menuGrid"></div>
   </div>
 
-  <!-- Info Button -->
-  <button class="info-btn" onclick="showInfo()">
-    <i class="fa-solid fa-circle-info"></i> اطلاعات کافه
-  </button>
-
-</div>
-
-<!-- Info Panel -->
-<div id="infoPanel" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#111; padding:25px; border-top:3px solid var(--accent); z-index:200; max-height:75vh; overflow:auto;">
-  <h3 style="text-align:center; color:var(--accent);">اطلاعات کافه</h3>
-  <p><strong>آدرس:</strong><br>انتهای خیابان راه آهن</p>
-  <p style="margin:18px 0;"><strong>تلفن:</strong><br>۰۲۱-۳۳۳۴۴۵۵۶</p>
-  <p><strong>ساعات کاری:</strong><br>۱۰ صبح تا ۱۲ شب</p>
-  <button onclick="hideInfo()" style="margin-top:25px; width:100%; padding:14px; background:#222; border:none; border-radius:12px; color:white;">بستن</button>
 </div>
 
 <script>
 let menuItems = [];
-let currentCategory = null;
+let categories = [];
 
 async function loadMenu(){
   try{
     const res = await fetch('menu-data.json?t=' + Date.now());
     menuItems = await res.json();
-  }catch(e){}
+  }catch(e){
+    console.error("خطا در بارگذاری منو", e);
+  }
   renderCategories();
 }
 
+function getCategories(){
+  const catMap = new Map();
+  menuItems.forEach(item => {
+    if(!catMap.has(item.category)){
+      catMap.set(item.category, {
+        name: item.category,
+        emoji: item.categoryEmoji || item.emoji || '☕'  // اولویت: categoryEmoji -> emoji -> پیش‌فرض
+      });
+    }
+  });
+  return Array.from(catMap.values());
+}
+
 function renderCategories(){
-  const cats = [...new Set(menuItems.map(i => i.category))];
+  categories = getCategories();
   let html = '';
 
-  cats.forEach(cat => {
+  categories.forEach(cat => {
     html += `
-      <div class="cat-item" onclick="openCategory('${cat}')">
-        <div class="icon">☕</div>
-        <div class="cat-name">${cat}</div>
+      <div class="cat-item" onclick="openCategory('${cat.name}')">
+        <div class="icon">${cat.emoji}</div>
+        <div class="cat-name">${cat.name}</div>
       </div>`;
   });
 
   document.getElementById('catGrid').innerHTML = html;
 }
 
-function openCategory(cat){
-  currentCategory = cat;
+function openCategory(catName){
   document.getElementById('categoriesView').style.display = 'none';
   document.getElementById('itemsView').style.display = 'block';
   
-  document.getElementById('currentCatTitle').textContent = cat;
+  document.getElementById('currentCatTitle').textContent = catName;
 
-  const filtered = menuItems.filter(i => i.category === cat);
+  const filtered = menuItems.filter(i => i.category === catName);
   let html = '';
 
   filtered.forEach(item => {
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
+    const emojiHTML = item.emoji ? 
+      `<div class="emoji">${item.emoji}</div>` : 
+      (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
+
     html += `
       <div class="menu-item">
-        ${item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`}
+        ${emojiHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
       </div>`;
@@ -213,17 +208,9 @@ function backToCategories(){
   document.getElementById('categoriesView').style.display = 'block';
 }
 
-function showInfo(){
-  document.getElementById('infoPanel').style.display = 'block';
-}
-function hideInfo(){
-  document.getElementById('infoPanel').style.display = 'none';
-}
-
-// Search (simple)
+// Search
 document.getElementById('searchInput').addEventListener('input', (e) => {
   if(e.target.value.trim() !== ''){
-    // For simplicity, go back to categories when searching
     backToCategories();
   }
 });
