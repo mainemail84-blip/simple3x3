@@ -117,13 +117,14 @@
   }
   .menu-item img{
     width:100%; 
-    height:120px; 
+    height:125px; 
     object-fit:cover; 
     border-radius:12px;
+    background:#222;
   }
   .menu-item .emoji{
     width:100%; 
-    height:120px; 
+    height:125px; 
     background:#222; 
     border-radius:12px;
     font-size:48px; 
@@ -173,7 +174,9 @@ async function loadMenu(){
   try{
     const res = await fetch('menu-data.json?t=' + Date.now());
     menuItems = await res.json();
-  }catch(e){}
+  }catch(e){
+    console.error("خطا در بارگذاری JSON", e);
+  }
   renderCategories();
 }
 
@@ -183,7 +186,7 @@ function getCategories(){
     if(!catMap.has(item.category)){
       catMap.set(item.category, {
         name: item.category,
-        emoji: item.categoryEmoji || item.emoji || '📌'   // ایموجی پیش‌فرض
+        emoji: item.categoryEmoji || item.emoji || '📌'
       });
     }
   });
@@ -196,7 +199,7 @@ function renderCategories(){
 
   categories.forEach(cat => {
     html += `
-      <div class="cat-item" onclick="openCategory('${cat.name}')">
+      <div class="cat-item" onclick="openCategory('${cat.name.replace(/'/g, "\\'")}')">
         <div class="icon">${cat.emoji}</div>
         <div class="cat-name">${cat.name}</div>
       </div>`;
@@ -222,13 +225,12 @@ function openCategory(catName){
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
-    let mediaHTML = '';
-    if (item.image) {
-      mediaHTML = `<img src="${item.image}" alt="${item.name}">`;
+    let mediaHTML = `<div class="emoji">☕</div>`; // پیش‌فرض
+
+    if (item.image && item.image.trim() !== '') {
+      mediaHTML = `<img src="${item.image}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
     } else if (item.emoji) {
       mediaHTML = `<div class="emoji">${item.emoji}</div>`;
-    } else {
-      mediaHTML = `<div class="emoji">☕</div>`;
     }
 
     html += `
@@ -248,7 +250,7 @@ function backToCategories(){
   setTimeout(() => {
     itemsView.style.display = 'none';
     document.getElementById('categoriesView').style.display = 'block';
-  }, 280);
+  }, 300);
 }
 
 document.getElementById('searchInput').addEventListener('input', () => {
