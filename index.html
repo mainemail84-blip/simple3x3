@@ -168,7 +168,6 @@ async function loadMenu(){
     renderCategories();
   }catch(e){
     console.error("خطا:", e);
-    document.getElementById('catGrid').innerHTML = `<p style="text-align:center;padding:60px;color:#666;">فایل menu-data.json پیدا نشد</p>`;
   }
 }
 
@@ -215,10 +214,8 @@ function openCategory(catName){
     let mediaHTML = `<div class="emoji">☕</div>`;
 
     if (item.image) {
-      const imageSrc = item.image.startsWith('http') || item.image.startsWith('/') 
-        ? item.image 
-        : `images/${item.image}`;
-      mediaHTML = `<img src="${imageSrc}" alt="${item.name}" onerror="this.outerHTML='<div class=\\'emoji\\'>☕</div>'">`;
+      const imageSrc = `img/${item.image}`;   // تغییر مهم: img/ به جای images/
+      mediaHTML = `<img src="${imageSrc}" alt="${item.name}">`;
     } else if (item.emoji) {
       mediaHTML = `<div class="emoji">${item.emoji}</div>`;
     }
