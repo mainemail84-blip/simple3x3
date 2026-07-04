@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>simple3x3</title>
+<title>simple3x3 • منو</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +28,7 @@
     background:#111;
   }
   .logo{
-    font-size:28px; font-weight:900; color:var(--accent);
+    font-size:26px; font-weight:900; color:var(--accent); letter-spacing:1px;
   }
   .subtitle{font-size:13.5px; color:#888; margin-top:4px;}
 
@@ -57,9 +57,10 @@
     text-align:center;
     border:1px solid #222;
     cursor:pointer;
-    transition:0.3s;
+    transition:all 0.3s ease;
   }
-  .cat-item:hover{transform:scale(1.06);}
+  .cat-item:hover{transform:scale(1.08);}
+
   .cat-item .icon{
     font-size:42px;
     margin-bottom:10px;
@@ -68,21 +69,32 @@
     align-items:center;
     justify-content:center;
   }
-  .cat-name{
-    font-weight:700;
-    font-size:14.5px;
-  }
+  .cat-name{font-weight:700; font-size:14.5px;}
 
   /* Items View */
   .items-view{
     display:none;
     padding:10px 16px;
+    animation: fadeInUp 0.4s ease forwards;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .top-bar-items{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+    padding:0 4px;
   }
   .back-btn{
     background:none; border:none; color:var(--accent);
-    font-size:18px; padding:10px 0; margin-bottom:10px;
-    cursor:pointer;
+    font-size:17px; padding:8px 12px; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
   }
+
   .menu-grid{
     display:grid;
     grid-template-columns: repeat(2, 1fr);
@@ -93,6 +105,11 @@
     border-radius:16px;
     padding:12px;
     text-align:center;
+    animation: popIn 0.4s ease backwards;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
   }
   .menu-item img, .menu-item .emoji{
     width:100%; height:110px; object-fit:cover; border-radius:12px;
@@ -108,8 +125,8 @@
 <div class="app">
 
   <div class="header">
-    <div class="logo">simple3x3</div>
-    <div class="subtitle">کافه و رستوران</div>
+    <div class="logo">SIMPLE3X3</div>
+    <div class="subtitle">منو دیجیتال</div>
   </div>
 
   <div class="search">
@@ -124,10 +141,12 @@
 
   <!-- Items View -->
   <div id="itemsView" class="items-view">
-    <button class="back-btn" onclick="backToCategories()">
-      ← بازگشت به دسته‌بندی‌ها
-    </button>
-    <h3 id="currentCatTitle" style="color:var(--accent); margin-bottom:15px;"></h3>
+    <div class="top-bar-items">
+      <button class="back-btn" onclick="backToCategories()">
+        <i class="fa-solid fa-chevron-right"></i> بازگشت
+      </button>
+      <h3 id="currentCatTitle" style="color:var(--accent); margin:0; font-size:19px;"></h3>
+    </div>
     <div class="menu-grid" id="menuGrid"></div>
   </div>
 
@@ -135,15 +154,12 @@
 
 <script>
 let menuItems = [];
-let categories = [];
 
 async function loadMenu(){
   try{
     const res = await fetch('menu-data.json?t=' + Date.now());
     menuItems = await res.json();
-  }catch(e){
-    console.error("خطا در بارگذاری منو", e);
-  }
+  }catch(e){}
   renderCategories();
 }
 
@@ -153,7 +169,7 @@ function getCategories(){
     if(!catMap.has(item.category)){
       catMap.set(item.category, {
         name: item.category,
-        emoji: item.categoryEmoji || item.emoji || '☕'  // اولویت: categoryEmoji -> emoji -> پیش‌فرض
+        emoji: item.categoryEmoji || item.emoji || '☕'
       });
     }
   });
@@ -161,7 +177,7 @@ function getCategories(){
 }
 
 function renderCategories(){
-  categories = getCategories();
+  const categories = getCategories();
   let html = '';
 
   categories.forEach(cat => {
@@ -177,14 +193,15 @@ function renderCategories(){
 
 function openCategory(catName){
   document.getElementById('categoriesView').style.display = 'none';
-  document.getElementById('itemsView').style.display = 'block';
+  const itemsView = document.getElementById('itemsView');
+  itemsView.style.display = 'block';
   
   document.getElementById('currentCatTitle').textContent = catName;
 
   const filtered = menuItems.filter(i => i.category === catName);
   let html = '';
 
-  filtered.forEach(item => {
+  filtered.forEach((item, index) => {
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
@@ -193,7 +210,7 @@ function openCategory(catName){
       (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
 
     html += `
-      <div class="menu-item">
+      <div class="menu-item" style="animation-delay: ${index * 0.05}s">
         ${emojiHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
@@ -208,11 +225,8 @@ function backToCategories(){
   document.getElementById('categoriesView').style.display = 'block';
 }
 
-// Search
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  if(e.target.value.trim() !== ''){
-    backToCategories();
-  }
+document.getElementById('searchInput').addEventListener('input', () => {
+  backToCategories();
 });
 
 loadMenu();
