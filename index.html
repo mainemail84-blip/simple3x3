@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>simple3x3 • منو</title>
+<title>کساب • منو</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +28,7 @@
     background:#111;
   }
   .logo{
-    font-size:26px; font-weight:900; color:var(--accent); letter-spacing:1px;
+    font-size:28px; font-weight:900; color:var(--accent);
   }
   .subtitle{font-size:13.5px; color:#888; margin-top:4px;}
 
@@ -43,7 +43,7 @@
   }
   .search i{position:absolute; left:18px; top:50%; transform:translateY(-50%); color:#777;}
 
-  /* Categories Grid */
+  /* Categories Grid - 3x3 */
   .cat-grid{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
@@ -57,47 +57,32 @@
     text-align:center;
     border:1px solid #222;
     cursor:pointer;
-    transition:all 0.3s ease;
+    transition:0.3s;
   }
-  .cat-item:hover{transform:scale(1.08);}
-
+  .cat-item:hover{transform:scale(1.06);}
   .cat-item .icon{
     font-size:42px;
     margin-bottom:10px;
-    height:65px;
+    height:60px;
     display:flex;
     align-items:center;
     justify-content:center;
   }
-  .cat-name{font-weight:700; font-size:14.5px;}
+  .cat-name{
+    font-weight:700;
+    font-size:14.5px;
+  }
 
   /* Items View */
   .items-view{
     display:none;
     padding:10px 16px;
   }
-  .items-view.active{
-    display:block;
-    animation: fadeInUp 0.45s ease forwards;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .top-bar-items{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:12px;
-    padding:0 4px;
-  }
   .back-btn{
     background:none; border:none; color:var(--accent);
-    font-size:17px; padding:8px 12px; cursor:pointer;
-    display:flex; align-items:center; gap:6px;
+    font-size:18px; padding:10px 0; margin-bottom:10px;
+    cursor:pointer;
   }
-
   .menu-grid{
     display:grid;
     grid-template-columns: repeat(2, 1fr);
@@ -108,31 +93,14 @@
     border-radius:16px;
     padding:12px;
     text-align:center;
-    opacity:0;
-    animation: popIn 0.5s ease forwards;
   }
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.75) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .menu-item img{
-    width:100%; 
-    height:125px; 
-    object-fit:cover; 
-    border-radius:12px;
-    background:#222;
+  .menu-item img, .menu-item .emoji{
+    width:100%; height:110px; object-fit:cover; border-radius:12px;
   }
   .menu-item .emoji{
-    width:100%; 
-    height:125px; 
-    background:#222; 
-    border-radius:12px;
-    font-size:48px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center;
+    background:#222; font-size:48px; display:flex; align-items:center; justify-content:center;
   }
-  .menu-name{font-weight:700; margin:10px 0 6px; font-size:15px;}
+  .menu-name{font-weight:700; margin:10px 0 6px;}
   .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
 </style>
 </head>
@@ -140,8 +108,8 @@
 <div class="app">
 
   <div class="header">
-    <div class="logo">SIMPLE3X3</div>
-    <div class="subtitle">منو دیجیتال</div>
+    <div class="logo">KASSAB</div>
+    <div class="subtitle">کافه و رستوران</div>
   </div>
 
   <div class="search">
@@ -149,19 +117,17 @@
     <i class="fa-solid fa-magnifying-glass"></i>
   </div>
 
-  <!-- Categories -->
+  <!-- Categories Grid -->
   <div id="categoriesView">
     <div class="cat-grid" id="catGrid"></div>
   </div>
 
   <!-- Items View -->
   <div id="itemsView" class="items-view">
-    <div class="top-bar-items">
-      <button class="back-btn" onclick="backToCategories()">
-        <i class="fa-solid fa-chevron-right"></i> بازگشت
-      </button>
-      <h3 id="currentCatTitle" style="color:var(--accent); margin:0; font-size:19px;"></h3>
-    </div>
+    <button class="back-btn" onclick="backToCategories()">
+      ← بازگشت به دسته‌بندی‌ها
+    </button>
+    <h3 id="currentCatTitle" style="color:var(--accent); margin-bottom:15px;"></h3>
     <div class="menu-grid" id="menuGrid"></div>
   </div>
 
@@ -169,13 +135,14 @@
 
 <script>
 let menuItems = [];
+let categories = [];
 
 async function loadMenu(){
   try{
     const res = await fetch('menu-data.json?t=' + Date.now());
     menuItems = await res.json();
   }catch(e){
-    console.error("خطا در بارگذاری JSON", e);
+    console.error("خطا در بارگذاری منو", e);
   }
   renderCategories();
 }
@@ -186,7 +153,7 @@ function getCategories(){
     if(!catMap.has(item.category)){
       catMap.set(item.category, {
         name: item.category,
-        emoji: item.categoryEmoji || item.emoji || '📌'
+        emoji: item.categoryEmoji || item.emoji || '☕'  // اولویت: categoryEmoji -> emoji -> پیش‌فرض
       });
     }
   });
@@ -194,12 +161,12 @@ function getCategories(){
 }
 
 function renderCategories(){
-  const categories = getCategories();
+  categories = getCategories();
   let html = '';
 
   categories.forEach(cat => {
     html += `
-      <div class="cat-item" onclick="openCategory('${cat.name.replace(/'/g, "\\'")}')">
+      <div class="cat-item" onclick="openCategory('${cat.name}')">
         <div class="icon">${cat.emoji}</div>
         <div class="cat-name">${cat.name}</div>
       </div>`;
@@ -210,37 +177,24 @@ function renderCategories(){
 
 function openCategory(catName){
   document.getElementById('categoriesView').style.display = 'none';
-  
-  const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  void itemsView.offsetWidth;
-  itemsView.classList.add('active');
+  document.getElementById('itemsView').style.display = 'block';
   
   document.getElementById('currentCatTitle').textContent = catName;
 
   const filtered = menuItems.filter(i => i.category === catName);
   let html = '';
 
-  filtered.forEach((item, index) => {
+  filtered.forEach(item => {
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
-    let mediaHTML = `<div class="emoji">☕</div>`;
-
-    if (item.image && item.image.trim() !== '') {
-      // اضافه کردن مسیر images/
-      const imagePath = item.image.startsWith('http') || item.image.startsWith('/') 
-        ? item.image 
-        : `images/${item.image}`;
-      
-      mediaHTML = `<img src="${imagePath}" alt="${item.name}" onerror="this.style.display='none'; this.parentElement.querySelector('.emoji').style.display='flex';">`;
-    } else if (item.emoji) {
-      mediaHTML = `<div class="emoji">${item.emoji}</div>`;
-    }
+    const emojiHTML = item.emoji ? 
+      `<div class="emoji">${item.emoji}</div>` : 
+      (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
 
     html += `
-      <div class="menu-item" style="animation-delay: ${index * 0.06}s">
-        ${mediaHTML}
+      <div class="menu-item">
+        ${emojiHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
       </div>`;
@@ -250,16 +204,15 @@ function openCategory(catName){
 }
 
 function backToCategories(){
-  const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  setTimeout(() => {
-    itemsView.style.display = 'none';
-    document.getElementById('categoriesView').style.display = 'block';
-  }, 300);
+  document.getElementById('itemsView').style.display = 'none';
+  document.getElementById('categoriesView').style.display = 'block';
 }
 
-document.getElementById('searchInput').addEventListener('input', () => {
-  backToCategories();
+// Search
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  if(e.target.value.trim() !== ''){
+    backToCategories();
+  }
 });
 
 loadMenu();
