@@ -43,7 +43,7 @@
   }
   .search i{position:absolute; left:18px; top:50%; transform:translateY(-50%); color:#777;}
 
-  /* Categories Grid - 3x3 */
+  /* Categories Grid */
   .cat-grid{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
@@ -75,11 +75,20 @@
   .items-view{
     display:none;
     padding:10px 16px;
-    animation: fadeInUp 0.4s ease forwards;
+  }
+  .items-view.active{
+    display:block;
+    animation: fadeInUp 0.45s ease forwards;
   }
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+      opacity: 0; 
+      transform: translateY(40px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
   }
 
   .top-bar-items{
@@ -105,20 +114,19 @@
     border-radius:16px;
     padding:12px;
     text-align:center;
-    animation: popIn 0.4s ease backwards;
+    opacity:0;
+    animation: popIn 0.5s ease forwards;
   }
   @keyframes popIn {
-    from { opacity: 0; transform: scale(0.85); }
-    to { opacity: 1; transform: scale(1); }
+    from { 
+      opacity: 0; 
+      transform: scale(0.75) translateY(20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: scale(1) translateY(0); 
+    }
   }
-  .menu-item img, .menu-item .emoji{
-    width:100%; height:110px; object-fit:cover; border-radius:12px;
-  }
-  .menu-item .emoji{
-    background:#222; font-size:48px; display:flex; align-items:center; justify-content:center;
-  }
-  .menu-name{font-weight:700; margin:10px 0 6px;}
-  .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
 </style>
 </head>
 <body>
@@ -134,7 +142,7 @@
     <i class="fa-solid fa-magnifying-glass"></i>
   </div>
 
-  <!-- Categories Grid -->
+  <!-- Categories -->
   <div id="categoriesView">
     <div class="cat-grid" id="catGrid"></div>
   </div>
@@ -192,9 +200,17 @@ function renderCategories(){
 }
 
 function openCategory(catName){
+  // Hide categories
   document.getElementById('categoriesView').style.display = 'none';
+  
+  // Show items with animation
   const itemsView = document.getElementById('itemsView');
-  itemsView.style.display = 'block';
+  itemsView.classList.remove('active');
+  
+  // Force reflow
+  void itemsView.offsetWidth;
+  
+  itemsView.classList.add('active');
   
   document.getElementById('currentCatTitle').textContent = catName;
 
@@ -210,7 +226,7 @@ function openCategory(catName){
       (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
 
     html += `
-      <div class="menu-item" style="animation-delay: ${index * 0.05}s">
+      <div class="menu-item" style="animation-delay: ${index * 0.06}s">
         ${emojiHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
@@ -221,8 +237,11 @@ function openCategory(catName){
 }
 
 function backToCategories(){
-  document.getElementById('itemsView').style.display = 'none';
-  document.getElementById('categoriesView').style.display = 'block';
+  document.getElementById('itemsView').classList.remove('active');
+  setTimeout(() => {
+    document.getElementById('itemsView').style.display = 'none';
+    document.getElementById('categoriesView').style.display = 'block';
+  }, 300);
 }
 
 document.getElementById('searchInput').addEventListener('input', () => {
