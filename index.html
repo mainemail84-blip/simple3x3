@@ -43,267 +43,7 @@
   }
   .search i{position:absolute; left:18px; top:50%; transform:translateY(-50%); color:#777;}
 
-  /* Categories Grid */
-  .cat-grid{
-    display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap:14px;
-    padding:10px 16px;
-  }
-  .cat-item{
-    background:var(--card);
-    border-radius:18px;
-    padding:16px 10px;
-    text-align:center;
-    border:1px solid #222;
-    cursor:pointer;
-    transition:all 0.3s ease;
-  }
-  .cat-item:hover{transform:scale(1.08);}
-
-  .cat-item .icon{
-    font-size:42px;
-    margin-bottom:10px;
-    height:65px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .cat-name{font-weight:700; font-size:14.5px;}
-
-  /* Items View */
-  .items-view{
-    display:none;
-    padding:10px 16px;
-  }
-  .items-view.active{
-    display:block;
-    animation: fadeInUp 0.45s ease forwards;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .top-bar-items{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:12px;
-    padding:0 4px;
-  }
-  .back-btn{
-    background:none; border:none; color:var(--accent);
-    font-size:17px; padding:8px 12px; cursor:pointer;
-    display:flex; align-items:center; gap:6px;
-  }
-
-  .menu-grid{
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap:12px;
-  }
-  .menu-item{
-    background:var(--card);
-    border-radius:16px;
-    padding:12px;
-    text-align:center;
-    opacity:0;
-    animation: popIn 0.5s ease forwards;
-  }
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.75) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .menu-item img{
-    width:100%; 
-    height:120px; 
-    object-fit:cover; 
-    border-radius:12px;
-  }
-  .menu-item .emoji{
-    width:100%; 
-    height:120px; 
-    background:#222; 
-    border-radius:12px;
-    font-size:48px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center;
-  }
-  .menu-name{font-weight:700; margin:10px 0 6px; font-size:15px;}
-  .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
-</style>
-</head>
-<body>
-<div class="app">
-
-  <div class="header">
-    <div class="logo">SIMPLE3X3</div>
-    <div class="subtitle">منو دیجیتال</div>
-  </div>
-
-  <div class="search">
-    <input id="searchInput" type="text" placeholder="جستجو...">
-    <i class="fa-solid fa-magnifying-glass"></i>
-  </div>
-
-  <!-- Categories -->
-  <div id="categoriesView">
-    <div class="cat-grid" id="catGrid"></div>
-  </div>
-
-  <!-- Items View -->
-  <div id="itemsView" class="items-view">
-    <div class="top-bar-items">
-      <button class="back-btn" onclick="backToCategories()">
-        <i class="fa-solid fa-chevron-right"></i> بازگشت
-      </button>
-      <h3 id="currentCatTitle" style="color:var(--accent); margin:0; font-size:19px;"></h3>
-    </div>
-    <div class="menu-grid" id="menuGrid"></div>
-  </div>
-
-</div>
-
-<script>
-let menuItems = [];
-
-async function loadMenu(){
-  try{
-    const res = await fetch('menu-data.json?t=' + Date.now());
-    menuItems = await res.json();
-  }catch(e){}
-  renderCategories();
-}
-
-function getCategories(){
-  const catMap = new Map();
-  menuItems.forEach(item => {
-    if(!catMap.has(item.category)){
-      catMap.set(item.category, {
-        name: item.category,
-        emoji: item.categoryEmoji || item.emoji || '📌'   // ایموجی پیش‌فرض
-      });
-    }
-  });
-  return Array.from(catMap.values());
-}
-
-function renderCategories(){
-  const categories = getCategories();
-  let html = '';
-
-  categories.forEach(cat => {
-    html += `
-      <div class="cat-item" onclick="openCategory('${cat.name}')">
-        <div class="icon">${cat.emoji}</div>
-        <div class="cat-name">${cat.name}</div>
-      </div>`;
-  });
-
-  document.getElementById('catGrid').innerHTML = html;
-}
-
-function openCategory(catName){
-  document.getElementById('categoriesView').style.display = 'none';
-  
-  const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  void itemsView.offsetWidth;
-  itemsView.classList.add('active');
-  
-  document.getElementById('currentCatTitle').textContent = catName;
-
-  const filtered = menuItems.filter(i => i.category === catName);
-  let html = '';
-
-  filtered.forEach((item, index) => {
-    const price = Number(item.price);
-    const hasPrice = !isNaN(price) && price > 0;
-
-    let mediaHTML = '';
-    if (item.image) {
-      mediaHTML = `<img src="${item.image}" alt="${item.name}">`;
-    } else if (item.emoji) {
-      mediaHTML = `<div class="emoji">${item.emoji}</div>`;
-    } else {
-      mediaHTML = `<div class="emoji">☕</div>`;
-    }
-
-    html += `
-      <div class="menu-item" style="animation-delay: ${index * 0.06}s">
-        ${mediaHTML}
-        <div class="menu-name">${item.name}</div>
-        ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
-      </div>`;
-  });
-
-  document.getElementById('menuGrid').innerHTML = html;
-}
-
-function backToCategories(){
-  const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  setTimeout(() => {
-    itemsView.style.display = 'none';
-    document.getElementById('categoriesView').style.display = 'block';
-  }, 280);
-}
-
-document.getElementById('searchInput').addEventListener('input', () => {
-  backToCategories();
-});
-
-loadMenu();
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>simple3x3 • منو</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#0a0a0a;
-    --card:#121212;
-    --accent:#c9a23d;
-    --text:#f0f0f0;
-    --dim:#aaaaaa;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; font-family:'Vazirmatn', sans-serif;
-    background:var(--bg); color:var(--text);
-  }
-  .app{max-width:430px; margin:0 auto; min-height:100vh; padding-bottom:80px;}
-
-  /* Header */
-  .header{
-    padding:20px 16px 12px;
-    text-align:center;
-    background:#111;
-  }
-  .logo{
-    font-size:26px; font-weight:900; color:var(--accent); letter-spacing:1px;
-  }
-  .subtitle{font-size:13.5px; color:#888; margin-top:4px;}
-
-  .search{
-    margin:15px 16px;
-    position:relative;
-  }
-  .search input{
-    width:100%; padding:14px 20px 14px 50px;
-    background:#1c1c1c; border:1px solid #333; border-radius:16px;
-    color:white; font-size:15px;
-  }
-  .search i{position:absolute; left:18px; top:50%; transform:translateY(-50%); color:#777;}
-
-  /* Categories Grid */
+  /* Categories Grid - 3x3 */
   .cat-grid{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
@@ -335,13 +75,10 @@ loadMenu();
   .items-view{
     display:none;
     padding:10px 16px;
-  }
-  .items-view.active{
-    display:block;
-    animation: fadeInUp 0.45s ease forwards;
+    animation: fadeInUp 0.4s ease forwards;
   }
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px); }
+    from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -368,30 +105,19 @@ loadMenu();
     border-radius:16px;
     padding:12px;
     text-align:center;
-    opacity:0;
-    animation: popIn 0.5s ease forwards;
+    animation: popIn 0.4s ease backwards;
   }
   @keyframes popIn {
-    from { opacity: 0; transform: scale(0.75) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
   }
-  .menu-item img{
-    width:100%; 
-    height:120px; 
-    object-fit:cover; 
-    border-radius:12px;
+  .menu-item img, .menu-item .emoji{
+    width:100%; height:110px; object-fit:cover; border-radius:12px;
   }
   .menu-item .emoji{
-    width:100%; 
-    height:120px; 
-    background:#222; 
-    border-radius:12px;
-    font-size:48px; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center;
+    background:#222; font-size:48px; display:flex; align-items:center; justify-content:center;
   }
-  .menu-name{font-weight:700; margin:10px 0 6px; font-size:15px;}
+  .menu-name{font-weight:700; margin:10px 0 6px;}
   .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
 </style>
 </head>
@@ -408,7 +134,7 @@ loadMenu();
     <i class="fa-solid fa-magnifying-glass"></i>
   </div>
 
-  <!-- Categories -->
+  <!-- Categories Grid -->
   <div id="categoriesView">
     <div class="cat-grid" id="catGrid"></div>
   </div>
@@ -443,7 +169,7 @@ function getCategories(){
     if(!catMap.has(item.category)){
       catMap.set(item.category, {
         name: item.category,
-        emoji: item.categoryEmoji || '☕'
+        emoji: item.categoryEmoji || item.emoji || '☕'
       });
     }
   });
@@ -467,11 +193,8 @@ function renderCategories(){
 
 function openCategory(catName){
   document.getElementById('categoriesView').style.display = 'none';
-  
   const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  void itemsView.offsetWidth;
-  itemsView.classList.add('active');
+  itemsView.style.display = 'block';
   
   document.getElementById('currentCatTitle').textContent = catName;
 
@@ -482,19 +205,13 @@ function openCategory(catName){
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
-    // اولویت با عکس، بعد ایموجی
-    let mediaHTML = '';
-    if (item.image) {
-      mediaHTML = `<img src="${item.image}" alt="${item.name}">`;
-    } else if (item.emoji) {
-      mediaHTML = `<div class="emoji">${item.emoji}</div>`;
-    } else {
-      mediaHTML = `<div class="emoji">☕</div>`;
-    }
+    const emojiHTML = item.emoji ? 
+      `<div class="emoji">${item.emoji}</div>` : 
+      (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
 
     html += `
-      <div class="menu-item" style="animation-delay: ${index * 0.06}s">
-        ${mediaHTML}
+      <div class="menu-item" style="animation-delay: ${index * 0.05}s">
+        ${emojiHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
       </div>`;
@@ -504,12 +221,8 @@ function openCategory(catName){
 }
 
 function backToCategories(){
-  const itemsView = document.getElementById('itemsView');
-  itemsView.classList.remove('active');
-  setTimeout(() => {
-    itemsView.style.display = 'none';
-    document.getElementById('categoriesView').style.display = 'block';
-  }, 300);
+  document.getElementById('itemsView').style.display = 'none';
+  document.getElementById('categoriesView').style.display = 'block';
 }
 
 document.getElementById('searchInput').addEventListener('input', () => {
