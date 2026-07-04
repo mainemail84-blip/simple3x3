@@ -81,14 +81,8 @@
     animation: fadeInUp 0.45s ease forwards;
   }
   @keyframes fadeInUp {
-    from { 
-      opacity: 0; 
-      transform: translateY(40px); 
-    }
-    to { 
-      opacity: 1; 
-      transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .top-bar-items{
@@ -118,15 +112,27 @@
     animation: popIn 0.5s ease forwards;
   }
   @keyframes popIn {
-    from { 
-      opacity: 0; 
-      transform: scale(0.75) translateY(20px); 
-    }
-    to { 
-      opacity: 1; 
-      transform: scale(1) translateY(0); 
-    }
+    from { opacity: 0; transform: scale(0.75) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
   }
+  .menu-item img{
+    width:100%; 
+    height:120px; 
+    object-fit:cover; 
+    border-radius:12px;
+  }
+  .menu-item .emoji{
+    width:100%; 
+    height:120px; 
+    background:#222; 
+    border-radius:12px;
+    font-size:48px; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center;
+  }
+  .menu-name{font-weight:700; margin:10px 0 6px; font-size:15px;}
+  .menu-price{color:var(--accent); font-weight:800; font-size:15px;}
 </style>
 </head>
 <body>
@@ -177,7 +183,7 @@ function getCategories(){
     if(!catMap.has(item.category)){
       catMap.set(item.category, {
         name: item.category,
-        emoji: item.categoryEmoji || item.emoji || '☕'
+        emoji: item.categoryEmoji || '☕'
       });
     }
   });
@@ -200,16 +206,11 @@ function renderCategories(){
 }
 
 function openCategory(catName){
-  // Hide categories
   document.getElementById('categoriesView').style.display = 'none';
   
-  // Show items with animation
   const itemsView = document.getElementById('itemsView');
   itemsView.classList.remove('active');
-  
-  // Force reflow
   void itemsView.offsetWidth;
-  
   itemsView.classList.add('active');
   
   document.getElementById('currentCatTitle').textContent = catName;
@@ -221,13 +222,19 @@ function openCategory(catName){
     const price = Number(item.price);
     const hasPrice = !isNaN(price) && price > 0;
 
-    const emojiHTML = item.emoji ? 
-      `<div class="emoji">${item.emoji}</div>` : 
-      (item.image ? `<img src="${item.image}" alt="">` : `<div class="emoji">☕</div>`);
+    // اولویت با عکس، بعد ایموجی
+    let mediaHTML = '';
+    if (item.image) {
+      mediaHTML = `<img src="${item.image}" alt="${item.name}">`;
+    } else if (item.emoji) {
+      mediaHTML = `<div class="emoji">${item.emoji}</div>`;
+    } else {
+      mediaHTML = `<div class="emoji">☕</div>`;
+    }
 
     html += `
       <div class="menu-item" style="animation-delay: ${index * 0.06}s">
-        ${emojiHTML}
+        ${mediaHTML}
         <div class="menu-name">${item.name}</div>
         ${hasPrice ? `<div class="menu-price">${price.toLocaleString('fa-IR')} تومان</div>` : ''}
       </div>`;
@@ -237,9 +244,10 @@ function openCategory(catName){
 }
 
 function backToCategories(){
-  document.getElementById('itemsView').classList.remove('active');
+  const itemsView = document.getElementById('itemsView');
+  itemsView.classList.remove('active');
   setTimeout(() => {
-    document.getElementById('itemsView').style.display = 'none';
+    itemsView.style.display = 'none';
     document.getElementById('categoriesView').style.display = 'block';
   }, 300);
 }
